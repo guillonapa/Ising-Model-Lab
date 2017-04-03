@@ -20,21 +20,17 @@ N = 100
 T = 300 # Kelvin
 BETA = (1.0 / (1.38064852 * T)) * math.pow(10, 23) # find how to set this
 J = 1 # e-20 # everything is normalized w.r.t. this, set to 1
-H = 1
+H = 1 # = B * mu
 
 MCS = 50000 # number of Monte Carlo steps
 
 
 ### FUNCTIONS ###
 
-def get_energy(ising_array):
-	energy_accumulator = 0
-	last_element = 0
-	for current_element in ising_array:
-		energy_accumulator += -J * last_element * current_element
-		last_element = current_element
-	return energy_accumulator
-
+# TODO: averages need to taken by averaging over monte carlo steps (need to wait for equilibrium)
+def get_spec_heat(ising_array):
+	E = get_energy(ising_array)
+	
 ### MAIN ###
 
 ising_array = np.zeros(N, dtype='int32')
@@ -43,6 +39,8 @@ for i in range(N):
 	
 
 energy_list = []
+file_object = open('file_name', 'w')
+current_energy = get_energy(ising_array)
 for i in range(MCS):
 	flip_index = random.randint(0, N - 1)
 	
@@ -57,13 +55,14 @@ for i in range(MCS):
 		delta_E += -J * candidate * right_element
 	
 	# update ising_array
-	if delta_E < 0:
+	if delta_E < 0 or random.random() < math.exp(-BETA * delta_E):
 		ising_array[flip_index] = candidate
-	elif random.random() < math.exp(-BETA * delta_E): 
-		ising_array[flip_index] = candidate
+		current_energy += delta_E
 	# else no change
 	
-	energy_list.append(get_energy(ising_array))
-
+	energy_list.append(current_energy)
+	file_object.write('{}, {} \n'.format(i, current_energy))
+	
+	
 plt.plot(energy_list)
 plt.show()

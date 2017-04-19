@@ -178,7 +178,6 @@ for BETA in beta_vals: #0.005):
 
 		if is_in_equilibrium:
 			energy_list.append(current_energy)
-			# TODO Add data to a file in here
 		elif i > MCS / 2:
 			is_in_equilibrium = True
 
@@ -191,5 +190,6 @@ for BETA in beta_vals: #0.005):
 	spec_heat_list.append(spec_heat)
 
 
+# TODO add beta_vals and spec_heat_list to a CSV file
 plt.plot(beta_vals, spec_heat_list)
 plt.show()

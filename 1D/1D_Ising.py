@@ -19,19 +19,23 @@ import time
 
 N = 50 # 100 #0
 M = N
-T = 300 # Kelvin
-BETA = 1 # (1.0 / (1.38064852 * T)) * math.pow(10, 23) # find how to set this
+NUM_SPINS = N * M
+#T = 300 # Kelvin
+#BETA = 1 # (1.0 / (1.38064852 * T)) * math.pow(10, 23) # find how to set this
+k_B = 1.38064852e-23 # m^2 kg s^-2 K-1
 J = 1 # e-20 # everything is normalized w.r.t. this, set to 1
 H = 0 # = B * mu
 
-MCS = 10000000 # number of Monte Carlo steps
+MCS = int(1.0e6) # 7 # number of Monte Carlo steps
 
 dim1 = False
+
+np.random.seed(7)
 
 
 ### FUNCTIONS ###
 
-def update(ising_array):
+def update(ising_array, BETA):
 	if dim1: # 1D
 		flip_index = random.randint(0, N - 1)
 	
@@ -116,7 +120,6 @@ def get_neighbors(i, j):
 	return neighbor_list
 
 
-# TODO: averages need to taken by averaging over monte carlo steps (need to wait for equilibrium)
 def get_spec_heat(energy_list):
 	E_acc = 0
 	E2_acc = 0
@@ -129,16 +132,22 @@ def get_spec_heat(energy_list):
 	E2_avg = float(E2_acc) / num_entries
 	
 	return E2_avg - (E_avg * E_avg)
-	
+
+############	
 ### MAIN ###
+############
 
 spec_heat_list = []
 beta_vals = np.arange(.2, 1, 0.05)
-for BETA in beta_vals: #0.005):
-#	if BETA % 10 == 0:
-#		print 'Working on BETA = ' + str(BETA)
+T_vals = np.arange(1.9, 2.6, .1)
+#for BETA in beta_vals: 
+for T in T_vals:
+#	print 'Working on BETA = ' + str(BETA)
+	print 'Working on T = ' + str(T)
+
+#	T = 1 / (k_B * BETA)
+	BETA = 1 / (k_B * T)
 		
-	print 'working on BETA = ' + str(BETA)
 	
 	if dim1:
 		ising_array = np.zeros(N, dtype='int32')
@@ -156,25 +165,7 @@ for BETA in beta_vals: #0.005):
 #	current_mag = get_mag(ising_array)
 	is_in_equilibrium = False
 	for i in range(MCS):
-#		flip_index = random.randint(0, N - 1)
-#	
-#		# get delta_E
-#		candidate = -ising_array[flip_index]
-#		delta_E = -H * candidate
-#		if flip_index > 0:
-#			left_element = ising_array[flip_index - 1]
-#			delta_E += -J * left_element * candidate
-#		if flip_index < N - 1:
-#			right_element = ising_array[flip_index + 1]
-#			delta_E += -J * candidate * right_element
-#	
-#		# update ising_array
-#		if delta_E < 0 or random.random() < math.exp(-BETA * delta_E):
-#			ising_array[flip_index] = candidate
-#			current_energy += delta_E
-#		# else no change
-
-		current_energy += update(ising_array)
+		current_energy += update(ising_array, BETA)
 	
 		if is_in_equilibrium:
 			energy_list.append(current_energy)
@@ -184,11 +175,22 @@ for BETA in beta_vals: #0.005):
 		
 #	plt.plot(energy_list)
 #	plt.show()
-#	time.sleep(180)	
 		
-	spec_heat = get_spec_heat(energy_list)
+	# energy is in units of J
+	
+	temp = get_spec_heat(energy_list)
+	print temp
+	print np.var(energy_list)
+	print '#######'
+	spec_heat = temp / (T * T) # get_spec_heat(energy_list) / (T*T)
 	spec_heat_list.append(spec_heat)
 
 
-plt.plot(beta_vals, spec_heat_list)
+#plt.plot(beta_vals, spec_heat_list)
+plt.plot(T_vals, spec_heat_list)
 plt.show()
+
+
+
+
+

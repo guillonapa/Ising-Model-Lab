@@ -17,7 +17,7 @@ import time
 
 ### PARAMETERS ###
 
-N = 50 # 100
+N = 100 # 50
 M = N
 NUM_SPINS = N * M
 #T = 300 # Kelvin
@@ -26,7 +26,7 @@ k_B = 1.38064852e-23 # m^2 kg s^-2 K-1
 J = 1 # e-20 # everything is normalized w.r.t. this, set to 1
 H = 0 # = B * mu
 
-MCS = int(2.0e6) # 7 # number of Monte Carlo steps
+MCS = int(1.0e6) # 7 # number of Monte Carlo steps
 
 dim1 = False
 

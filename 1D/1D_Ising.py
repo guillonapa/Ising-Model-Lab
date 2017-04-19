@@ -34,7 +34,7 @@ dim1 = False
 def update(ising_array):
 	if dim1: # 1D
 		flip_index = random.randint(0, N - 1)
-	
+
 		# get delta_E
 		candidate = -ising_array[flip_index]
 		delta_E = -H * candidate
@@ -44,27 +44,27 @@ def update(ising_array):
 		if flip_index < N - 1:
 			right_element = ising_array[flip_index + 1]
 			delta_E += -J * candidate * right_element
-	
-		
+
+
 		if delta_E < 0 or random.random() < math.exp(-BETA * delta_E): # update ising_array
 			ising_array[flip_index] = candidate
 			return delta_E
 		else: # else no change
 			return 0
-	
+
 	else: # 2D
 		flip_index_x = random.randint(0, N - 1)
 		flip_index_y = random.randint(0, N - 1)
-		
+
 		candidate = -ising_array[flip_index_x, flip_index_y]
 		delta_E = -H * candidate
-		
+
 		neighbors = get_neighbors(flip_index_x, flip_index_y)
 		for index in neighbors:
-			index_x, index_y = index 
+			index_x, index_y = index
 			delta_E += -J * ising_array[index_x, index_y] * candidate
-				
-		
+
+
 		if delta_E < 0 or random.random() < math.exp(-BETA * delta_E): # update ising_array
 			ising_array[flip_index_x, flip_index_y] = candidate
 			return delta_E
@@ -79,20 +79,20 @@ def get_energy(ising_array):
 			energy_accumulator += -J * last_element * current_element - H * current_element
 			last_element = current_element
 		return energy_accumulator
-		
+
 	else: # 2D
 		energy_accumulator = 0
 		for i in range(0, N):
 			for j in range(0, M):
 				current_element = ising_array[i, j]
 				energy_accumulator += -H * current_element
-				
+
 				neighbors = get_neighbors(i, j)
 				for index in neighbors:
 					index_x, index_y = index
 					energy_accumulator += -J * ising_array[index_x, index_y] * current_element
 		return energy_accumulator / 2
-				
+
 
 def get_neighbors(i, j):
 	neighbor_list = []
@@ -112,7 +112,7 @@ def get_neighbors(i, j):
 		if j < M - 1:
 			neighbor_list.append((i, j+1))
 			neighbor_list.append((i+1, j+1))
-	
+
 	return neighbor_list
 
 
@@ -123,13 +123,13 @@ def get_spec_heat(energy_list):
 	for energy in energy_list:
 		E_acc += energy
 		E2_acc += energy * energy
-	
+
 	num_entries = len(energy_list)
 	E_avg = float(E_acc) / num_entries
 	E2_avg = float(E2_acc) / num_entries
-	
+
 	return E2_avg - (E_avg * E_avg)
-	
+
 ### MAIN ###
 
 spec_heat_list = []
@@ -137,9 +137,9 @@ beta_vals = np.arange(.2, 1, 0.05)
 for BETA in beta_vals: #0.005):
 #	if BETA % 10 == 0:
 #		print 'Working on BETA = ' + str(BETA)
-		
+
 	print 'working on BETA = ' + str(BETA)
-	
+
 	if dim1:
 		ising_array = np.zeros(N, dtype='int32')
 		for i in range(N):
@@ -149,7 +149,7 @@ for BETA in beta_vals: #0.005):
 		for i in range(N):
 			for j in range(M):
 				ising_array[i, j] = 2 * random.randint(0, 1) - 1 # initialize to +/- 1
-	
+
 
 	energy_list = []
 	current_energy = get_energy(ising_array)
@@ -157,7 +157,7 @@ for BETA in beta_vals: #0.005):
 	is_in_equilibrium = False
 	for i in range(MCS):
 #		flip_index = random.randint(0, N - 1)
-#	
+#
 #		# get delta_E
 #		candidate = -ising_array[flip_index]
 #		delta_E = -H * candidate
@@ -167,7 +167,7 @@ for BETA in beta_vals: #0.005):
 #		if flip_index < N - 1:
 #			right_element = ising_array[flip_index + 1]
 #			delta_E += -J * candidate * right_element
-#	
+#
 #		# update ising_array
 #		if delta_E < 0 or random.random() < math.exp(-BETA * delta_E):
 #			ising_array[flip_index] = candidate
@@ -175,17 +175,18 @@ for BETA in beta_vals: #0.005):
 #		# else no change
 
 		current_energy += update(ising_array)
-	
+
 		if is_in_equilibrium:
 			energy_list.append(current_energy)
+			# TODO Add data to a file in here
 		elif i > MCS / 2:
 			is_in_equilibrium = True
-			
-		
+
+
 #	plt.plot(energy_list)
 #	plt.show()
-#	time.sleep(180)	
-		
+#	time.sleep(180)
+
 	spec_heat = get_spec_heat(energy_list)
 	spec_heat_list.append(spec_heat)
 

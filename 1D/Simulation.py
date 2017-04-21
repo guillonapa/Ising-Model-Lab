@@ -17,7 +17,7 @@ import time
 
 ### PARAMETERS ###
 
-N = 50 # 100
+N = 25 # 100
 M = N
 NUM_SPINS = N * M
 #T = 300 # Kelvin

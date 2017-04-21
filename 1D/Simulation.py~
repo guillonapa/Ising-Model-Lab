@@ -17,7 +17,7 @@ import time
 
 ### PARAMETERS ###
 
-N = 100 # 50
+N = 50 # 100
 M = N
 NUM_SPINS = N * M
 #T = 300 # Kelvin
@@ -26,7 +26,7 @@ k_B = 1.38064852e-23 # m^2 kg s^-2 K-1
 J = 1 # e-20 # everything is normalized w.r.t. this, set to 1
 H = 0 # = B * mu
 
-MCS = int(1.0e6) # 7 # number of Monte Carlo steps
+MCS = int(2.0e6) # 7 # number of Monte Carlo steps
 
 dim1 = False
 
@@ -187,8 +187,8 @@ for T in T_vals:
 			is_in_equilibrium = True
 
 
-#	plt.plot(energy_list)
-#	plt.show()
+	plt.plot(energy_list)
+	plt.show()
 
 	# energy is in units of J
 

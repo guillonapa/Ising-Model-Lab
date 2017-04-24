@@ -4,6 +4,7 @@ import random
 import math
 import matplotlib.pyplot as plt
 import time
+import pickle
 
 
 # TODO: so far the only param quantity that matters is the product BETA * J, combine params into ratio's
@@ -26,7 +27,7 @@ k_B = 1.38064852e-23 # m^2 kg s^-2 K-1
 J = 1 # e-20 # everything is normalized w.r.t. this, set to 1
 H = 0 # = B * mu
 
-MCS = int(2.0e6) # 7 # number of Monte Carlo steps
+MCS = int(1.8e6) #8) # 7 # number of Monte Carlo steps
 
 dim1 = False
 
@@ -150,7 +151,7 @@ def get_neighbors(i, j):
 spec_heat_list = []
 susceptibility_list = []
 beta_vals = np.arange(.2, 1, 0.05)
-T_vals = np.arange(1.9, 2.6, .1)
+T_vals = np.arange(1.9, 2.6, .05)
 #for BETA in beta_vals:
 for T in T_vals:
 #	print 'Working on BETA = ' + str(BETA)
@@ -172,33 +173,54 @@ for T in T_vals:
 
 
 	energy_list = []
-	magnetization_list = []
 	current_energy, current_magnetization = get_energy_and_magnetization(ising_array)
+	energy_avg = 0
+	energy_var = 0
+	mag_avg = 0
+	mag_var = 0
 	is_in_equilibrium = False
-	for i in range(MCS):
+	i = 0
+	k = 0 # how many summands we have in our average
+	while i < MCS: 
+		i += 1
+		
 		e_update, mag_update = update(ising_array, BETA) # if we return the delta(magnetization)
 		current_energy += e_update
 		current_magnetization += mag_update
 
 		if is_in_equilibrium:
 			energy_list.append(current_energy)
-			magnetization_list.append(current_magnetization)
+			
+			k += 1
+			new_energy_avg = energy_avg + float(current_energy - energy_avg) / k
+			energy_var += (current_energy - energy_avg) * (current_energy - new_energy_avg)
+			energy_avg = new_energy_avg
+			
+			new_mag_avg = mag_avg + float(current_magnetization - mag_avg) / k
+			mag_var += (current_magnetization - mag_avg) * (current_magnetization - new_mag_avg)
+			mag_acg = new_mag_avg
+			
 		elif i > MCS / 2:
+			k = 1
+			energy_var = current_energy
+			mag_var = current_magnetization
 			is_in_equilibrium = True
-
+	energy_var /= k - 1
+	mag_var /= k - 1
 
 #	plt.plot(energy_list)
 #	plt.show()
 
 	# energy is in units of J
 
-	temp = np.var(energy_list)
+	temp = energy_var 
 	print temp
+	print np.var(energy_list)
 	print '#######'
 	spec_heat = temp / (T * T) # get_spec_heat(energy_list) / (T*T)
 	spec_heat_list.append(spec_heat)
 	
-	susceptibility = np.var(magnetization_list) / T
+	susceptibility = mag_var / T
 	susceptibility_list.append(susceptibility)
 
 # TODO add beta_vals and spec_heat_list to a CSV file

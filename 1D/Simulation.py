@@ -87,15 +87,15 @@ def get_energy_and_magnetization(ising_array):
 	if dim1: # 1D
 		energy_accumulator = 0
 		last_element = 0
-		
+
 		magnetization_accumulator = 0
-		
+
 		for current_element in ising_array:
 			energy_accumulator += -J * last_element * current_element - H * current_element
 			last_element = current_element
-			
+
 			magnetization_accumulator += current_element
-			
+
 		tot_magnetization = magnetization_accumulator / float(len(ising_array))
 		return energy_accumulator, tot_magnetization
 
@@ -105,10 +105,10 @@ def get_energy_and_magnetization(ising_array):
 		for i in range(0, N):
 			for j in range(0, M):
 				magnetization_accumulator += ising_array[i, j]
-				
+
 				current_element = ising_array[i, j]
 				energy_accumulator += -H * current_element
-				
+
 				neighbors = get_neighbors(i, j)
 				for index in neighbors:
 					index_x, index_y = index
@@ -129,7 +129,7 @@ def get_neighbors(i, j):
 			neighbor_set.add((i-1, j+1))
 	if i < N - 1:
 		neighbor_set.add((i+1, j))
-		if j > 0: 
+		if j > 0:
 			neighbor_set.add((i, j-1)) # m1
 			neighbor_set.add((i+1, j-1))
 		if j < M - 1:
@@ -183,18 +183,18 @@ for KbT in KbT_vals:
 	is_in_equilibrium = False
 	i = 0
 	k = 0 # how many summands we have in our average
-	while i < MCS: 
+	while i < MCS:
 		i += 1
-		
+
 		e_update, mag_update = update(ising_array, BETA) # if we return the delta(magnetization)
 		current_energy += e_update
 		current_magnetization += mag_update
 		current_abs_mag = abs(current_magnetization)
-		
+
 		if i % (MCS / num_snaps) == 0:
 			if KbT < 1.35:
 				low_T_snaps.append(np.copy(ising_array))
-				
+
 			elif KbT > 3.25:
 				hi_T_snaps.append(np.copy(ising_array))
 
@@ -203,17 +203,17 @@ for KbT in KbT_vals:
 			new_energy_avg = energy_avg + float(current_energy - energy_avg) / k
 			energy_var += (current_energy - energy_avg) * (current_energy - new_energy_avg)
 			energy_avg = new_energy_avg
-			
+
 			new_mag_avg = mag_avg + float(current_abs_mag - mag_avg) / k
 			mag_var += (current_abs_mag - mag_avg) * (current_abs_mag - new_mag_avg)
 			mag_avg = new_mag_avg
-			
+
 		elif i > MCS / 2:
 			k = 1
 			energy_avg = current_energy
 			mag_avg = current_abs_mag
 			is_in_equilibrium = True
-			
+
 	energy_var /= k - 1
 	mag_var /= k - 1
 
@@ -222,14 +222,14 @@ for KbT in KbT_vals:
 
 	# energy is in units of J
 
-#	temp = energy_var 
+#	temp = energy_var
 #	print temp
 ##	print np.var(energy_list)
 #	print '#######'
 	energy_list.append(energy_avg)
 	spec_heat = energy_var / (KbT * KbT) # get_spec_heat(energy_list) / (T*T) TODO: scale by Kb?
 	spec_heat_list.append(spec_heat)
-	
+
 	mag_list.append(mag_avg)
 	susceptibility = mag_var / KbT # TODO: scale by Kb?
 	susceptibility_list.append(susceptibility)
@@ -282,27 +282,29 @@ pickle_file = open('KbT_E_C_M_Chi.pkl', 'w')
 data = (KbT_vals, energy_list, spec_heat_list, mag_list, susceptibility_list)
 pickle.dump(data, pickle_file)
 
+if dim1:
 
-counter = 0
-for snap in low_T_snaps:
-	counter += 1
-	cold_fig = plt.figure()
-	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
-	cold_fig.savefig('cold_snaps/snap_{}.png'.format(counter))
-	plt.close()
-	
-	
-print len(low_T_snaps)
+	print "No images for one dimensional case"
 
-counter = 0
-for snap in hi_T_snaps:
-	counter += 1
-	cold_fig = plt.figure()
-	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
-	cold_fig.savefig('hot_snaps/snap_{}.png'.format(counter))
-	plt.close()
+else:
+
+	counter = 0
+	for snap in low_T_snaps:
+		counter += 1
+		cold_fig = plt.figure()
+		plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
+		cold_fig.savefig('cold_snaps/snap_{}.png'.format(counter))
+		plt.close()
+
+
+	print len(low_T_snaps)
+
+	counter = 0
+	for snap in hi_T_snaps:
+		counter += 1
+		cold_fig = plt.figure()
+		plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
+		cold_fig.savefig('hot_snaps/snap_{}.png'.format(counter))
+		plt.close()
 
 print len(hi_T_snaps)
-
-
-

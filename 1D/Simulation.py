@@ -2,7 +2,10 @@
 import numpy as np
 import random
 import math
+
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+
 import time
 import pickle
 
@@ -18,7 +21,7 @@ import pickle
 
 ### PARAMETERS ###
 
-N = 25 # 10 # 100
+N = 10 # 10 # 100
 M = N
 NUM_SPINS = N * M
 #T = 300 # Kelvin
@@ -31,7 +34,7 @@ H = 0 # = B * mu
 # 10 -- int(1.0e7)
 # 25 -- int(5.0e7)
 # 100 -- int(1.8e8)
-MCS = int(5.0e7) #  #8) # 7 # number of Monte Carlo steps
+MCS = 1000 # int(5.0e5) #  #8) # 7 # number of Monte Carlo steps
 
 dim1 = False
 
@@ -113,18 +116,6 @@ def get_energy_and_magnetization(ising_array):
 		tot_magnetization = magnetization_accumulator / float( len(ising_array) * len(ising_array[0]) )
 		return energy_accumulator / 2, tot_magnetization
 
-#def get_magnetization(ising_array):
-#	if dim1: # 1D
-#		magnetization_accumulator = 0
-#		for current_element in ising_array:
-#			magnetization_accumulator += current_element
-#		return magnetization_accumulator / float(len(ising_array))
-#	else: # 2D
-#		magnetization_accumulator = 0
-#		for i in range(0, N):
-#			for j in range(0, M):
-#				magnetization_accumulator += ising_array[i, j]
-#		return magnetization_accumulator / float( len(ising_array) * len(ising_array[0]) )
 
 def get_neighbors(i, j):
 	neighbor_set = set([])
@@ -152,16 +143,23 @@ def get_neighbors(i, j):
 ### MAIN ###
 ############
 
+energy_list = []
 spec_heat_list = []
+mag_list = []
 susceptibility_list = []
-#beta_vals = np.arange(.2, 1, 0.05)
-KbT_vals = np.arange(1.9, 3.2, .1)
-#for BETA in beta_vals:
+
+num_snaps = 10 # 50
+low_T_snaps = []
+hi_T_snaps = []
+
+spacings = np.logspace(-1.5, 0, num=10)
+ups = 2.3 + spacings
+downs = (2.3 - spacings)[::-1]
+KbT_vals = np.concatenate([downs, ups]) # np.arange(1.9, 3.2, .1)
+
 for KbT in KbT_vals:
-#	print 'Working on BETA = ' + str(BETA)
 	print 'Working on KbT = ' + str(KbT)
 
-#	T = 1 / (k_B * BETA)
 	BETA = 1 / (KbT)
 
 
@@ -177,6 +175,7 @@ for KbT in KbT_vals:
 
 
 	current_energy, current_magnetization = get_energy_and_magnetization(ising_array)
+	current_abs_mag = abs(current_magnetization)
 	energy_avg = 0
 	energy_var = 0
 	mag_avg = 0
@@ -190,6 +189,14 @@ for KbT in KbT_vals:
 		e_update, mag_update = update(ising_array, BETA) # if we return the delta(magnetization)
 		current_energy += e_update
 		current_magnetization += mag_update
+		current_abs_mag = abs(current_magnetization)
+		
+		if i % (MCS / num_snaps) == 0:
+			if KbT < 1.35:
+				low_T_snaps.append(np.copy(ising_array))
+				
+			elif KbT > 3.25:
+				hi_T_snaps.append(np.copy(ising_array))
 
 		if is_in_equilibrium:
 			k += 1
@@ -197,15 +204,16 @@ for KbT in KbT_vals:
 			energy_var += (current_energy - energy_avg) * (current_energy - new_energy_avg)
 			energy_avg = new_energy_avg
 			
-			new_mag_avg = mag_avg + float(current_magnetization - mag_avg) / k
-			mag_var += (current_magnetization - mag_avg) * (current_magnetization - new_mag_avg)
+			new_mag_avg = mag_avg + float(current_abs_mag - mag_avg) / k
+			mag_var += (current_abs_mag - mag_avg) * (current_abs_mag - new_mag_avg)
 			mag_avg = new_mag_avg
 			
 		elif i > MCS / 2:
 			k = 1
 			energy_avg = current_energy
-			mag_avg = current_magnetization
+			mag_avg = current_abs_mag
 			is_in_equilibrium = True
+			
 	energy_var /= k - 1
 	mag_var /= k - 1
 
@@ -214,27 +222,76 @@ for KbT in KbT_vals:
 
 	# energy is in units of J
 
-	temp = energy_var 
-	print temp
-#	print np.var(energy_list)
-	print '#######'
-	spec_heat = temp / (KbT * KbT) # get_spec_heat(energy_list) / (T*T) TODO: scale by Kb?
+#	temp = energy_var 
+#	print temp
+##	print np.var(energy_list)
+#	print '#######'
+	energy_list.append(energy_avg)
+	spec_heat = energy_var / (KbT * KbT) # get_spec_heat(energy_list) / (T*T) TODO: scale by Kb?
 	spec_heat_list.append(spec_heat)
 	
+	mag_list.append(mag_avg)
 	susceptibility = mag_var / KbT # TODO: scale by Kb?
 	susceptibility_list.append(susceptibility)
 
 # TODO add beta_vals and spec_heat_list to a CSV file
 #plt.plot(beta_vals, spec_heat_list)
+energy_fig = plt.figure()
+plt.plot(KbT_vals, energy_list)
+energy_fig.suptitle('E vs. T', fontsize=20)
+plt.xlabel('T (J / Kb)', fontsize=18)
+plt.ylabel('E (J)', fontsize=16)
+energy_fig.savefig('plots/energy.jpg')
+
+spec_heat_fig = plt.figure()
 plt.plot(KbT_vals, spec_heat_list)
-plt.show()
+spec_heat_fig.suptitle('C vs. T', fontsize=20)
+plt.xlabel('T (J / Kb)', fontsize=18)
+plt.ylabel('C (Kb)', fontsize=16)
+spec_heat_fig.savefig('plots/spec_heat.jpg')
 
+mag_fig = plt.figure()
+plt.plot(KbT_vals, mag_list)
+mag_fig.suptitle('M vs. T', fontsize=20)
+plt.xlabel('T (J / Kb)', fontsize=18)
+plt.ylabel('M ()', fontsize=16)
+mag_fig.savefig('plots/mag.jpg')
+
+chi_fig = plt.figure()
 plt.plot(KbT_vals, susceptibility_list)
-plt.show()
+chi_fig.suptitle('Chi vs. T', fontsize=20)
+plt.xlabel('T (J / Kb)', fontsize=18)
+plt.ylabel('Chi ()', fontsize=16)
+chi_fig.savefig('plots/chi.jpg')
 
-open('sim_data.txt', 'rb')
+#plt.plot(KbT_vals, energy_list)
+#plt.show()
+#plt.plot(KbT_vals, spec_heat_list)
+#plt.show()
 
+#plt.plot(KbT_vals, mag_list)
+#plt.show()
+#plt.plot(KbT_vals, susceptibility_list)
+#plt.show()
 
+pickle_file = open('KbT_E_C_M_Chi.pkl', 'w')
+data = (KbT_vals, energy_list, spec_heat_list, mag_list, susceptibility_list)
+pickle.dump(data, pickle_file)
+
+new_fig = plt.figure()
+#for snap in low_T_snaps:
+##	plt.plot(snap)#, vmin=-1, vmax=1, cmap=cm.Greys_r)
+##	plt.show()
+#	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
+#	plt.show()
+	
+print len(low_T_snaps)
+
+for snap in hi_T_snaps:
+	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r)
+	plt.show()
+
+print len(hi_T_snaps)
 
 
 

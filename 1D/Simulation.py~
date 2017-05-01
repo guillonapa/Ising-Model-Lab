@@ -193,10 +193,10 @@ for KbT in KbT_vals:
 		
 		if i % (MCS / num_snaps) == 0:
 			if KbT < 1.35:
-				low_T_snaps.append(ising_array)
+				low_T_snaps.append(np.copy(ising_array))
 				
 			elif KbT > 3.25:
-				hi_T_snaps.append(ising_array)
+				hi_T_snaps.append(np.copy(ising_array))
 
 		if is_in_equilibrium:
 			k += 1
@@ -242,6 +242,7 @@ energy_fig.suptitle('E vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
 plt.ylabel('E (J)', fontsize=16)
 energy_fig.savefig('plots/energy.jpg')
+plt.close()
 
 spec_heat_fig = plt.figure()
 plt.plot(KbT_vals, spec_heat_list)
@@ -249,6 +250,7 @@ spec_heat_fig.suptitle('C vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
 plt.ylabel('C (Kb)', fontsize=16)
 spec_heat_fig.savefig('plots/spec_heat.jpg')
+plt.close()
 
 mag_fig = plt.figure()
 plt.plot(KbT_vals, mag_list)
@@ -256,6 +258,7 @@ mag_fig.suptitle('M vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
 plt.ylabel('M ()', fontsize=16)
 mag_fig.savefig('plots/mag.jpg')
+plt.close()
 
 chi_fig = plt.figure()
 plt.plot(KbT_vals, susceptibility_list)
@@ -263,6 +266,7 @@ chi_fig.suptitle('Chi vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
 plt.ylabel('Chi ()', fontsize=16)
 chi_fig.savefig('plots/chi.jpg')
+plt.close()
 
 #plt.plot(KbT_vals, energy_list)
 #plt.show()
@@ -278,18 +282,25 @@ pickle_file = open('KbT_E_C_M_Chi.pkl', 'w')
 data = (KbT_vals, energy_list, spec_heat_list, mag_list, susceptibility_list)
 pickle.dump(data, pickle_file)
 
-new_fig = plt.figure()
-#for snap in low_T_snaps:
-##	plt.plot(snap)#, vmin=-1, vmax=1, cmap=cm.Greys_r)
-##	plt.show()
-#	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
-#	plt.show()
+
+counter = 0
+for snap in low_T_snaps:
+	counter += 1
+	cold_fig = plt.figure()
+	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
+	cold_fig.savefig('cold_snaps/snap_{}.png'.format(counter))
+	plt.close()
+	
 	
 print len(low_T_snaps)
 
+counter = 0
 for snap in hi_T_snaps:
-	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r)
-	plt.show()
+	counter += 1
+	cold_fig = plt.figure()
+	plt.imshow(snap, vmin=-1, vmax=1, cmap=cm.Greys_r) #, vmin=-1, vmax=1, cmap=cm.Greys_r)
+	cold_fig.savefig('hot_snaps/snap_{}.png'.format(counter))
+	plt.close()
 
 print len(hi_T_snaps)
 

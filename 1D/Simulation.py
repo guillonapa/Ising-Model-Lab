@@ -226,13 +226,13 @@ for KbT in KbT_vals:
 #	print temp
 ##	print np.var(energy_list)
 #	print '#######'
-	energy_list.append(energy_avg)
+	energy_list.append(energy_avg / NUM_SPINS)
 	spec_heat = energy_var / (KbT * KbT) # get_spec_heat(energy_list) / (T*T) TODO: scale by Kb?
-	spec_heat_list.append(spec_heat)
+	spec_heat_list.append(spec_heat / NUM_SPINS)
 	
-	mag_list.append(mag_avg)
+	mag_list.append(mag_avg / NUM_SPINS)
 	susceptibility = mag_var / KbT # TODO: scale by Kb?
-	susceptibility_list.append(susceptibility)
+	susceptibility_list.append(susceptibility / NUM_SPINS)
 
 # TODO add beta_vals and spec_heat_list to a CSV file
 #plt.plot(beta_vals, spec_heat_list)
@@ -240,7 +240,7 @@ energy_fig = plt.figure()
 plt.plot(KbT_vals, energy_list)
 energy_fig.suptitle('E vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
-plt.ylabel('E (J)', fontsize=16)
+plt.ylabel('E (J / N)', fontsize=16)
 energy_fig.savefig('plots/energy.jpg')
 plt.close()
 
@@ -248,7 +248,7 @@ spec_heat_fig = plt.figure()
 plt.plot(KbT_vals, spec_heat_list)
 spec_heat_fig.suptitle('C vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
-plt.ylabel('C (Kb)', fontsize=16)
+plt.ylabel('C (Kb / N)', fontsize=16)
 spec_heat_fig.savefig('plots/spec_heat.jpg')
 plt.close()
 
@@ -256,7 +256,7 @@ mag_fig = plt.figure()
 plt.plot(KbT_vals, mag_list)
 mag_fig.suptitle('M vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
-plt.ylabel('M ()', fontsize=16)
+plt.ylabel('M (mu / N)', fontsize=16)
 mag_fig.savefig('plots/mag.jpg')
 plt.close()
 
@@ -264,7 +264,7 @@ chi_fig = plt.figure()
 plt.plot(KbT_vals, susceptibility_list)
 chi_fig.suptitle('Chi vs. T', fontsize=20)
 plt.xlabel('T (J / Kb)', fontsize=18)
-plt.ylabel('Chi ()', fontsize=16)
+plt.ylabel('Chi (mu^2 / N)', fontsize=16)
 chi_fig.savefig('plots/chi.jpg')
 plt.close()
 

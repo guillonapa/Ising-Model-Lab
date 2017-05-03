@@ -21,7 +21,7 @@ import pickle
 
 ### PARAMETERS ###
 
-N = 10 # 10 # 100
+N = 25 # 10 # 100
 M = N
 NUM_SPINS = N * M
 #T = 300 # Kelvin
@@ -34,7 +34,7 @@ H = 0 # = B * mu
 # 10 -- int(1.0e7)
 # 25 -- int(5.0e7)
 # 100 -- int(1.8e8)
-MCS = 1000 # int(5.0e5) #  #8) # 7 # number of Monte Carlo steps
+MCS = int(2.0e5) #  #8) # 7 # number of Monte Carlo steps
 
 dim1 = False
 
@@ -183,6 +183,9 @@ for KbT in KbT_vals:
 	is_in_equilibrium = False
 	i = 0
 	k = 0 # how many summands we have in our average
+	
+	evt = []
+	mvt = []
 	while i < MCS:
 		i += 1
 
@@ -190,6 +193,10 @@ for KbT in KbT_vals:
 		current_energy += e_update
 		current_magnetization += mag_update
 		current_abs_mag = abs(current_magnetization)
+		
+		evt.append(float(current_energy) / NUM_SPINS)
+		mvt.append(float(current_abs_mag) / NUM_SPINS)
+		
 
 		if i % (MCS / num_snaps) == 0:
 			if KbT < 1.35:
@@ -217,8 +224,24 @@ for KbT in KbT_vals:
 	energy_var /= k - 1
 	mag_var /= k - 1
 
-#	plt.plot(energy_list)
-#	plt.show()
+	plt.plot(evt)
+	plt.show()
+	if KbT < 1.35:
+		evt_fig = plt.figure()
+		plt.plot(evt)
+		evt_fig.suptitle('E vs. MCS', fontsize=20)
+		plt.xlabel('MCS', fontsize=18)
+		plt.ylabel('E (J / N)', fontsize=16)
+		evt_fig.savefig('plots/evt.jpg')
+		plt.close()
+	
+		mvt_fig = plt.figure()
+		plt.plot(mvt)
+		mvt_fig.suptitle('M vs. MCS', fontsize=20)
+		plt.xlabel('MCS', fontsize=18)
+		plt.ylabel('M (mu / N)', fontsize=16)
+		mvt_fig.savefig('plots/mvt.jpg')
+		plt.close()
 
 	# energy is in units of J
 
@@ -226,19 +249,13 @@ for KbT in KbT_vals:
 #	print temp
 ##	print np.var(energy_list)
 #	print '#######'
-	energy_list.append(energy_avg / NUM_SPINS)
+	energy_list.append(float(energy_avg) / NUM_SPINS)
 	spec_heat = energy_var / (KbT * KbT) # get_spec_heat(energy_list) / (T*T) TODO: scale by Kb?
-<<<<<<< HEAD
-	spec_heat_list.append(spec_heat / NUM_SPINS)
+	spec_heat_list.append(float(spec_heat) / NUM_SPINS)
 	
-	mag_list.append(mag_avg / NUM_SPINS)
-=======
-	spec_heat_list.append(spec_heat)
-
-	mag_list.append(mag_avg)
->>>>>>> 28fbd98b9605bdaba7d183b612a35a5837f9423e
+	mag_list.append(float(mag_avg) / NUM_SPINS)
 	susceptibility = mag_var / KbT # TODO: scale by Kb?
-	susceptibility_list.append(susceptibility / NUM_SPINS)
+	susceptibility_list.append(float(susceptibility) / NUM_SPINS)
 
 # TODO add beta_vals and spec_heat_list to a CSV file
 #plt.plot(beta_vals, spec_heat_list)
